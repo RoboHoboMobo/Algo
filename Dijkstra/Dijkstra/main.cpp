@@ -9,15 +9,12 @@
 #include <limits>
 #include <functional>
 
-using vertex = char;
-using edge = size_t;
-
 template <typename VertexType, typename EdgeType>
 using graph = std::unordered_map<VertexType, std::vector<std::pair<VertexType, EdgeType>>>;
 
-graph<vertex, edge> createGraph()
+graph<char, size_t> createGraph()
 {
-  graph<vertex, edge> g;
+  graph<char, size_t> g;
 
   g['A'] = {{'B', 6}, {'D', 1}};
   g['B'] = {{'A', 6}, {'D', 2}, {'E', 2}, {'C', 5}};
@@ -28,18 +25,19 @@ graph<vertex, edge> createGraph()
   return g;
 }
 
-void bfs(const graph<vertex, edge>& g, const vertex& source)
+template <typename VertexType, typename EdgeType>
+void bfs(const graph<VertexType, EdgeType>& g, const VertexType& source)
 {
   if (g.find(source) == g.cend())
     return;
 
-  std::unordered_set<vertex> visited;
+  std::unordered_set<VertexType> visited;
 
-  std::queue<vertex> bfs;
+  std::queue<VertexType> bfs;
   bfs.push(source);
 
   while (bfs.size()) {
-    vertex front = bfs.front();
+    VertexType front = bfs.front();
     bfs.pop();
 
     if (visited.find(front) != visited.end())
