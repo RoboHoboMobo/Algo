@@ -1,124 +1,47 @@
 #include <iostream>
 
-#include <utility>
-#include <vector>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
-#include <queue>
-#include <limits>
-#include <functional>
-
-template <typename VertexType, typename EdgeType>
-using graph = std::unordered_map<VertexType, std::vector<std::pair<VertexType, EdgeType>>>;
-
-graph<char, size_t> createGraph()
-{
-  graph<char, size_t> g;
-
-  g['A'] = {{'B', 6}, {'D', 1}};
-  g['B'] = {{'A', 6}, {'D', 2}, {'E', 2}, {'C', 5}};
-  g['D'] = {{'A', 1}, {'B', 2}, {'E', 1}};
-  g['E'] = {{'D', 1}, {'B', 2}, {'C', 5}};
-  g['C'] = {{'E', 5}, {'B', 5}};
-
-  return g;
-}
-
-template <typename VertexType, typename EdgeType>
-void bfs(const graph<VertexType, EdgeType>& g, const VertexType& source)
-{
-  if (g.find(source) == g.cend())
-    return;
-
-  std::unordered_set<VertexType> visited;
-
-  std::queue<VertexType> bfs;
-  bfs.push(source);
-
-  while (bfs.size()) {
-    VertexType front = bfs.front();
-    bfs.pop();
-
-    if (visited.find(front) != visited.end())
-      continue;
-
-    std::cout << front << std::endl;
-
-    visited.insert(front);
-
-    for (auto& [v, e] : g.at(front)) {
-      if (visited.find(v) == visited.end())
-        bfs.push(v);
-    }
-  }
-}
-
-template <typename VertexType, typename EdgeType>
-std::optional<EdgeType> dijkstra(const graph<VertexType, EdgeType>& g,
-                                 const VertexType& source, const VertexType& target)
-{
-  if (g.find(source) == g.cend() || g.find(target) == g.cend())
-    return {};
-
-  std::unordered_map<VertexType, EdgeType> minDist;
-
-  for (const auto& [v, adj] : g)
-    minDist[v] = std::numeric_limits<EdgeType>::max();
-
-  minDist[source] = 0;
-
-  std::unordered_map<VertexType, VertexType> prev;
-  std::unordered_set<VertexType> visited;
-
-  using vertexEdge = std::pair<VertexType, EdgeType>;
-
-  auto compare = [](const vertexEdge& a, const vertexEdge& b) {
-    return a.second > b.second;
-  };
-
-  std::priority_queue<vertexEdge, std::vector<vertexEdge>, decltype(compare)>
-  minHeap{compare};
-
-  minHeap.push({source, minDist[source]});
-
-  while (minHeap.size()) {
-    vertexEdge top = minHeap.top();
-    minHeap.pop();
-
-    if (visited.find(top.first) != visited.end())
-      continue;
-
-    visited.insert(top.first);
-
-    if (top.first == target)
-      continue;
-
-    for (const auto& adj : g.at(top.first)) {
-      EdgeType dist = adj.second + minDist[top.first];
-
-      if (dist < minDist[adj.first]) {
-        minDist[adj.first] = dist;
-        prev[adj.first] = top.first;
-      }
-
-      if (visited.find(adj.first) == visited.cend())
-        minHeap.push({adj.first, minDist[adj.first]});
-    }
-  }
-
-  return minDist[target] < std::numeric_limits<EdgeType>::max() ?
-    minDist[target] : std::optional<EdgeType>{};
-}
+#include "Dijkstra.h"
 
 int main()
 {
-  auto result = dijkstra(createGraph(), 'A', 'C');
+  // auto result = dijkstra(createGraph(), 'A', 'C');
 
-  if (result.has_value())
-    std::cout << "Distance: " << result.value() << std::endl;
-  else
-    std::cout << "Target vertex isn't reachable" << std::endl;
+  // if (result.has_value())
+  //   std::cout << "Distance: " << result.value() << std::endl;
+  // else
+  //   std::cout << "Target vertex isn't reachable" << std::endl;
+
+  grid<unsigned char> g{{0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 255, 255, 255, 255, 255, 255, 0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   255, 0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   255, 0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0},
+                        {0, 0, 0,   0,   0,   0,   0,   0,   0, 0}};
+
+  for (auto& v : g) {
+    for (int i : v)
+      std::cout << i << '\t';
+    std::cout << std::endl;
+  }
+
+  std::cout << std::endl;
+
+  using point = point<int>;
+  auto result = dijkstra(g, point{7, 1}, point{1, 8});
+
+  size_t counter = 0;
+  for (auto& i : result)
+    g[i.first][i.second] = ++counter;
+
+  for (auto& v : g) {
+    for (int i : v)
+      std::cout << i << '\t';
+    std::cout << std::endl;
+  }
 
   return 0;
 }
