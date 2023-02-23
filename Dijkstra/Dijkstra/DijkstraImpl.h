@@ -145,6 +145,22 @@ std::vector<point<coordType>> dijkstra(const grid<weightType>& g,
 
   std::unordered_set<point> visited;
 
+  auto doGreedy = [&](const point& curr, const point& next, double dist) {
+    if (isOnGrid(g, next) &&
+        g[next.first][next.second] < std::numeric_limits<weightType>::max()) {
+      double w =
+        dist * (1 + g[next.first][next.second]) + minWeight[curr.first][curr.second];
+
+      if (w < minWeight[next.first][next.second]) {
+        minWeight[next.first][next.second] = w;
+        prev[next.first][next.second] = {curr.first, curr.second};
+      }
+
+      if (visited.find(next) == visited.cend())
+        minHeap.push({next, minWeight[next.first][next.second]});
+    }
+  };
+
   while (minHeap.size()) {
     auto top = minHeap.top();
     minHeap.pop();
@@ -160,110 +176,14 @@ std::vector<point<coordType>> dijkstra(const grid<weightType>& g,
     if (g[row][col] == std::numeric_limits<weightType>::max() || top.first == target)
       continue;
 
-    if (isOnGrid(g, {row - 1, col}) &&
-        g[row - 1][col] < std::numeric_limits<weightType>::max()) {
-      double w = 1 +g[row - 1][col] + minWeight[row][col];
-
-      if (w < minWeight[row - 1][col]) {
-        minWeight[row - 1][col] = w;
-        prev[row - 1][col] = {row, col};
-      }
-
-      if (visited.find(point{row - 1, col}) == visited.cend())
-        minHeap.push({point{row - 1, col}, minWeight[row - 1][col]});
-    }
-
-    if (isOnGrid(g, {row + 1, col}) &&
-        g[row + 1][col] < std::numeric_limits<weightType>::max()) {
-      double w = 1 + g[row + 1][col] + minWeight[row][col];
-
-      if (w < minWeight[row + 1][col]) {
-        minWeight[row + 1][col] = w;
-        prev[row + 1][col] = {row, col};
-      }
-
-      if (visited.find(point{row + 1, col}) == visited.cend())
-        minHeap.push({point{row + 1, col}, minWeight[row + 1][col]});
-    }
-
-    if (isOnGrid(g, {row, col - 1}) &&
-        g[row][col - 1] < std::numeric_limits<weightType>::max()) {
-      double w = 1 + g[row][col - 1] + minWeight[row][col];
-
-      if (w < minWeight[row][col - 1]) {
-        minWeight[row][col - 1] = w;
-        prev[row][col - 1] = {row, col};
-      }
-
-      if (visited.find(point{row, col - 1}) == visited.cend())
-        minHeap.push({point{row, col - 1}, minWeight[row][col - 1]});
-    }
-
-    if (isOnGrid(g, {row, col + 1}) &&
-        g[row][col + 1] < std::numeric_limits<weightType>::max()) {
-      double w = 1 + g[row][col + 1] + minWeight[row][col];
-
-      if (w < minWeight[row][col + 1]) {
-        minWeight[row][col + 1] = w;
-        prev[row][col + 1] = {row, col};
-      }
-
-      if (visited.find(point{row, col + 1}) == visited.cend())
-        minHeap.push({point{row, col + 1}, minWeight[row][col + 1]});
-    }
-
-    // Diagonal
-    if (isOnGrid(g, {row - 1, col - 1}) &&
-        g[row - 1][col - 1] < std::numeric_limits<weightType>::max()) {
-      double w = sqrt(2) * (1 + g[row - 1][col - 1]) + minWeight[row][col];
-
-      if (w < minWeight[row - 1][col - 1]) {
-        minWeight[row - 1][col - 1] = w;
-        prev[row - 1][col - 1] = {row, col};
-      }
-
-      if (visited.find(point{row - 1, col - 1}) == visited.cend())
-        minHeap.push({point{row - 1, col - 1}, minWeight[row - 1][col - 1]});
-    }
-
-    if (isOnGrid(g, {row - 1, col + 1}) &&
-        g[row - 1][col + 1] < std::numeric_limits<weightType>::max()) {
-      double w = sqrt(2) * (1 + g[row - 1][col + 1]) + minWeight[row][col];
-
-      if (w < minWeight[row - 1][col + 1]) {
-        minWeight[row - 1][col + 1] = w;
-        prev[row - 1][col + 1] = {row, col};
-      }
-
-      if (visited.find(point{row - 1, col + 1}) == visited.cend())
-        minHeap.push({point{row - 1, col + 1}, minWeight[row - 1][col + 1]});
-    }
-
-    if (isOnGrid(g, {row + 1, col - 1}) &&
-        g[row + 1][col - 1] < std::numeric_limits<weightType>::max()) {
-      double w = sqrt(2) * (1 + g[row + 1][col - 1]) + minWeight[row][col];
-
-      if (w < minWeight[row + 1][col - 1]) {
-        minWeight[row + 1][col - 1] = w;
-        prev[row + 1][col - 1] = {row, col};
-      }
-
-      if (visited.find(point{row + 1, col - 1}) == visited.cend())
-        minHeap.push({point{row + 1, col - 1}, minWeight[row + 1][col - 1]});
-    }
-
-    if (isOnGrid(g, {row + 1, col + 1}) &&
-        g[row + 1][col + 1] < std::numeric_limits<weightType>::max()) {
-      double w = sqrt(2) * (1 + g[row + 1][col + 1]) + minWeight[row][col];
-
-      if (w < minWeight[row + 1][col + 1]) {
-        minWeight[row + 1][col + 1] = w;
-        prev[row + 1][col + 1] = {row, col};
-      }
-
-      if (visited.find(point{row + 1, col + 1}) == visited.cend())
-        minHeap.push({point{row + 1, col + 1}, minWeight[row + 1][col + 1]});
-    }
+    doGreedy(top.first, {row - 1, col}, 1);
+    doGreedy(top.first, {row + 1, col}, 1);
+    doGreedy(top.first, {row, col - 1}, 1);
+    doGreedy(top.first, {row, col + 1}, 1);
+    doGreedy(top.first, {row - 1, col - 1}, sqrt(2));
+    doGreedy(top.first, {row - 1, col + 1}, sqrt(2));
+    doGreedy(top.first, {row + 1, col - 1}, sqrt(2));
+    doGreedy(top.first, {row + 1, col + 1}, sqrt(2));
   }
 
   if (minWeight[target.first][target.second] == std::numeric_limits<double>::max())
